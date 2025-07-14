@@ -29,8 +29,11 @@ int main(int argc, char *argv[]) {
   // debug text.
   char buffer[100];
   char xbuffer[100];
+  // (TODO) I have to despawn destroyed entities, whether its an enemy that
+  // died/left the screen or a bullet that hit an enemy or went off screen
   Entity entities[10000];
   int entitiesLength = 0;
+  int weaponCooldown = 0;
 
   char buff[100];
   while (!WindowShouldClose()) {
@@ -64,9 +67,10 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if (IsKeyDown(KEY_SPACE)) {
-      Entity player_projectile = {.x = player.x,
-                                  .y = player.y,
+    if (IsKeyDown(KEY_SPACE) && weaponCooldown == 0) {
+      weaponCooldown = 60;
+      Entity player_projectile = {.x = player.x + (player.width / 4),
+                                  .y = player.y - 10,
                                   .dx = 5,
                                   .dy = 5,
                                   .width = 5,
@@ -76,11 +80,15 @@ int main(int argc, char *argv[]) {
       entities[entitiesLength++] = player_projectile;
     }
 
-    DrawText(buff, screenWidth - 120, 90, 20, RED);
+    DrawText(buff, screenWidth - 150, 90, 20, RED);
     for (int i = 0; i < entitiesLength; i++) {
-      Entity entity = entities[i];
-      entity.y -= entity.dy;
-      snprintf(buff, 100, "Entity: %i", entity.y);
+      Entity *entity = &entities[i];
+      entity->y -= entity->dy;
+      snprintf(buff, 100, "Entity y: %i", entity->y);
+    }
+
+    if (weaponCooldown > 0) {
+      weaponCooldown--;
     }
 
     // Draw
@@ -104,3 +112,12 @@ int main(int argc, char *argv[]) {
 // you can only play on the bottom half of the screen
 // maybe some of the game is spent flying through obstacles instead of shooting
 // enemies different levels
+// map should change so it's harder to navigate sometimes, like the walls will
+// close in but to compensate you can move up the map further
+// boosters?
+// dash or parry mechanic?
+// anti matter gun - can instatly vaporize an enemy or player. Denoted by green
+// bullet Levels
+// - Outerspace
+// - On a planet
+// - then theres terrain
