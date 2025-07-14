@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
   // debug text.
   char buffer[100];
   char xbuffer[100];
+  Entity entities[100];
 
   while (!WindowShouldClose()) {
     snprintf(xbuffer, 100, "X: %i", player.x);
@@ -61,7 +62,14 @@ int main(int argc, char *argv[]) {
       }
     }
 
+    // (TODO) shooter
     if (IsKeyDown(KEY_SPACE)) {
+      Entity player = {.x = player.x,
+                       .y = screenHeight - 100,
+                       .dx = 3,
+                       .dy = 3,
+                       .width = 10,
+                       .height = 10};
     }
 
     // Draw
