@@ -1,3 +1,10 @@
-gcc main.c -I./lib/raylib/include -L./lib/raylib/lib -Wl,-rpath=./lib/raylib/lib \
-  -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -o flight.exe
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  # macOS settings
+  gcc main.c $(pkg-config --libs --cflags raylib) -o flight.exe
+else
+  # Linux settings
+  gcc main.c -v -I./lib/raylib/include -L./lib/raylib/lib -Wl,-rpath=./lib/raylib/lib \
+    -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -o flight.exe
+fi
+
 ./flight.exe
