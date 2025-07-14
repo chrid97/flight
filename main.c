@@ -29,8 +29,10 @@ int main(int argc, char *argv[]) {
   // debug text.
   char buffer[100];
   char xbuffer[100];
-  Entity entities[100];
+  Entity entities[10000];
+  int entitiesLength = 0;
 
+  char buff[100];
   while (!WindowShouldClose()) {
     snprintf(xbuffer, 100, "X: %i", player.x);
     snprintf(buffer, 100, "Y: %i", player.y);
@@ -62,20 +64,34 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    // (TODO) shooter
     if (IsKeyDown(KEY_SPACE)) {
-      Entity player = {.x = player.x,
-                       .y = screenHeight - 100,
-                       .dx = 3,
-                       .dy = 3,
-                       .width = 10,
-                       .height = 10};
+      Entity player_projectile = {.x = player.x,
+                                  .y = player.y,
+                                  .dx = 5,
+                                  .dy = 5,
+                                  .width = 5,
+                                  .height = 5};
+
+      // proper error message when im out of bounds
+      entities[entitiesLength++] = player_projectile;
+    }
+
+    DrawText(buff, screenWidth - 120, 90, 20, RED);
+    for (int i = 0; i < entitiesLength; i++) {
+      Entity entity = entities[i];
+      entity.y -= entity.dy;
+      snprintf(buff, 100, "Entity: %i", entity.y);
     }
 
     // Draw
     BeginDrawing();
     ClearBackground(BLACK);
     DrawRectangle(player.x, player.y, player.width, player.height, ORANGE);
+
+    for (int i = 0; i < entitiesLength; i++) {
+      Entity entity = entities[i];
+      DrawRectangle(entity.x, entity.y, entity.width, entity.height, BLUE);
+    }
 
     EndDrawing();
   }

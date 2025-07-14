@@ -1,6 +1,6 @@
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # macOS settings
-  gcc main.c $(pkg-config --libs --cflags raylib) -o flight.exe
+  eval cc main.c $(pkg-config --libs --cflags raylib) -o flight.exe
 else
   # Linux settings
   gcc main.c -v -I./lib/raylib/include -L./lib/raylib/lib -Wl,-rpath=./lib/raylib/lib \
@@ -8,3 +8,4 @@ else
 fi
 
 ./flight.exe
+rm flight.exe
