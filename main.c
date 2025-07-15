@@ -9,6 +9,7 @@ typedef struct {
   int16_t dy;
   int16_t width;
   int16_t height;
+  int16_t attackCooldown;
 } Entity;
 
 int main(int argc, char *argv[]) {
@@ -18,12 +19,15 @@ int main(int argc, char *argv[]) {
   InitWindow(screenWidth, screenHeight, "Window");
   SetTargetFPS(60);
 
-  Entity player = {.x = screenWidth / 2,
-                   .y = screenHeight - 100,
-                   .dx = 3,
-                   .dy = 3,
-                   .width = 10,
-                   .height = 10};
+  Entity player = {
+      .x = screenWidth / 2,
+      .y = screenHeight - 100,
+      .dx = 3,
+      .dy = 3,
+      .width = 10,
+      .height = 10,
+      .attackCooldown = 0,
+  };
 
   // use the same buffer for this. Probably some debug buffer for all of the
   // debug text.
@@ -33,7 +37,6 @@ int main(int argc, char *argv[]) {
   // died/left the screen or a bullet that hit an enemy or went off screen
   Entity entities[10000];
   int entitiesLength = 0;
-  int weaponCooldown = 0;
 
   char buff[100];
   while (!WindowShouldClose()) {
@@ -44,7 +47,7 @@ int main(int argc, char *argv[]) {
 
     // Update
     if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) {
-      if (player.y > (screenHeight / 2) + player.height) {
+      if (player.y > screenHeight + player.height) {
         player.y -= player.dy;
       }
     }
@@ -67,14 +70,17 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if (IsKeyDown(KEY_SPACE) && weaponCooldown == 0) {
-      weaponCooldown = 60;
-      Entity player_projectile = {.x = player.x + (player.width / 4),
-                                  .y = player.y - 10,
-                                  .dx = 5,
-                                  .dy = 5,
-                                  .width = 5,
-                                  .height = 5};
+    if (IsKeyDown(KEY_SPACE) && player.attackCooldown == 0) {
+      player.attackCooldown = 60;
+      Entity player_projectile = {
+          .x = player.x + (player.width / 4),
+          .y = player.y - 10,
+          .dx = 5,
+          .dy = 5,
+          .width = 5,
+          .height = 5,
+          .attackCooldown = 0,
+      };
 
       // proper error message when im out of bounds
       entities[entitiesLength++] = player_projectile;
@@ -87,9 +93,22 @@ int main(int argc, char *argv[]) {
       snprintf(buff, 100, "Entity y: %i", entity->y);
     }
 
-    if (weaponCooldown > 0) {
-      weaponCooldown--;
+    // maybe I should just have a entity update function then we loop through
+    // all of the entities and update whatever needs to get updated every tick
+    if (player.attackCooldown > 0) {
+      player.attackCooldown--;
     }
+
+    Entity enemy = {
+        .x = screenWidth / 2,
+        .y = 100,
+        .dx = 5,
+        .dy = 5,
+        .width = 10,
+        .height = 10,
+        .attackCooldown = 0,
+    };
+    DrawRectangle(enemy.x, enemy.y, enemy.width, enemy.height, GREEN);
 
     // Draw
     BeginDrawing();
@@ -121,3 +140,19 @@ int main(int argc, char *argv[]) {
 // - Outerspace
 // - On a planet
 // - then theres terrain
+//
+//
+// im pivoting
+// youre going to have a sword and you can parry and maybe dash
+// every floor is just 1 room
+// your goal is to get to the top floor
+// bosses every 5 floors
+// only 10 floors
+// isometric game? like zelda?
+// 2d side scroller?
+// beat em up?
+//
+//
+// 2d side view one room - each room is a levels
+// core mechanic is parrying
+//
