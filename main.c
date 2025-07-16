@@ -1,4 +1,5 @@
 #include "raylib.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -10,7 +11,14 @@ typedef struct {
   int16_t width;
   int16_t height;
   int16_t attackCooldown;
+  int16_t parryCooldown;
+  Color color;
 } Entity;
+
+bool CheckCollision(Entity a, Entity b) {
+  return (a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height &&
+          a.y + a.height > b.y);
+}
 
 int main(int argc, char *argv[]) {
   const int screenWidth = 800;
@@ -19,13 +27,33 @@ int main(int argc, char *argv[]) {
   InitWindow(screenWidth, screenHeight, "Window");
   SetTargetFPS(60);
 
-  Entity player = {
-      .x = screenWidth / 2,
+  Entity player = {.x = 10,
+                   .y = screenHeight - 90,
+                   .dx = 2.5,
+                   .dy = 2.5,
+                   .width = 50,
+                   .height = 100,
+                   .attackCooldown = 0,
+                   .parryCooldown = 0,
+                   .color = ORANGE};
+  Entity enemy = {
+      .x = screenWidth - 100,
       .y = screenHeight - 100,
-      .dx = 3,
-      .dy = 3,
-      .width = 10,
-      .height = 10,
+      .dx = 0,
+      .dy = 0,
+      .width = 50,
+      .height = 100,
+      .attackCooldown = 0,
+  };
+  int enemyAttacking = 0;
+  int resting = 120;
+  Entity enemyWeapon = {
+      .x = enemy.x - 100,
+      .y = enemy.y + 50,
+      .dx = 1,
+      .dy = 1,
+      .width = 0,
+      .height = 0,
       .attackCooldown = 0,
   };
 
@@ -40,52 +68,38 @@ int main(int argc, char *argv[]) {
 
   char buff[100];
   while (!WindowShouldClose()) {
-    snprintf(xbuffer, 100, "X: %i", player.x);
-    snprintf(buffer, 100, "Y: %i", player.y);
-    DrawText(buffer, screenWidth - 80, 20, 20, RED);
-    DrawText(xbuffer, screenWidth - 80, 40, 20, RED);
 
-    // Update
-    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) {
-      if (player.y > screenHeight + player.height) {
-        player.y -= player.dy;
-      }
-    }
+    // Input //
 
-    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) {
-      if (player.y < (screenHeight - player.height)) {
-        player.y += player.dy;
-      }
-    }
+    // if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) {
+    //     player.y -= player.dy;
+    // }
+
+    // if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) {
+    //     player.y += player.dy;
+    // }
 
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
-      if (player.x > 0) {
-        player.x -= player.dx;
-      }
+      player.x -= player.dx;
     }
 
     if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
-      if (player.x < (screenWidth - player.width)) {
-        player.x += player.dx;
+      player.x += player.dx;
+    }
+
+    if (IsKeyDown(KEY_SPACE) && player.parryCooldown == 0) {
+      player.parryCooldown = 15;
+      player.color = RED;
+    }
+
+    if (player.parryCooldown > 0) {
+      player.parryCooldown--;
+      if (player.parryCooldown == 0) {
+        player.color = GOLD;
       }
     }
 
-    if (IsKeyDown(KEY_SPACE) && player.attackCooldown == 0) {
-      player.attackCooldown = 60;
-      Entity player_projectile = {
-          .x = player.x + (player.width / 4),
-          .y = player.y - 10,
-          .dx = 5,
-          .dy = 5,
-          .width = 5,
-          .height = 5,
-          .attackCooldown = 0,
-      };
-
-      // proper error message when im out of bounds
-      entities[entitiesLength++] = player_projectile;
-    }
-
+    // Update
     DrawText(buff, screenWidth - 150, 90, 20, RED);
     for (int i = 0; i < entitiesLength; i++) {
       Entity *entity = &entities[i];
@@ -93,32 +107,66 @@ int main(int argc, char *argv[]) {
       snprintf(buff, 100, "Entity y: %i", entity->y);
     }
 
-    // maybe I should just have a entity update function then we loop through
-    // all of the entities and update whatever needs to get updated every tick
-    if (player.attackCooldown > 0) {
-      player.attackCooldown--;
-    }
-
-    Entity enemy = {
-        .x = screenWidth / 2,
-        .y = 100,
-        .dx = 5,
-        .dy = 5,
-        .width = 10,
-        .height = 10,
-        .attackCooldown = 0,
-    };
-    DrawRectangle(enemy.x, enemy.y, enemy.width, enemy.height, GREEN);
-
-    // Draw
+    // Draw //
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawRectangle(player.x, player.y, player.width, player.height, ORANGE);
+    DrawRectangle(player.x, player.y, player.width, player.height,
+                  player.color);
 
-    for (int i = 0; i < entitiesLength; i++) {
-      Entity entity = entities[i];
-      DrawRectangle(entity.x, entity.y, entity.width, entity.height, BLUE);
+    // for (int i = 0; i < entitiesLength; i++) {
+    //   Entity entity = entities[i];
+    //   DrawRectangle(entity.x, entity.y, entity.width, entity.height,
+    //   entity.color);
+    // }
+
+    if (resting > 0) {
+      resting--;
+      enemyWeapon.width = 0;
+      enemyWeapon.height = 0;
     }
+
+    if (resting == 0) {
+      enemyAttacking = 120;
+    }
+
+    if (enemyAttacking > 0) {
+      enemyAttacking--;
+      enemyWeapon.width = 100;
+      enemyWeapon.height = 10;
+    } else {
+      resting = 120;
+    }
+
+    DrawRectangle(enemy.x, enemy.y, enemy.width, enemy.height, GREEN);
+    DrawRectangle(enemyWeapon.x, enemyWeapon.y, enemyWeapon.width,
+                  enemyWeapon.height, BROWN);
+
+    // if (CheckCollision(player, enemyWeapon) || CheckCollision(player, enemy))
+    // {
+    //   player.color = RED;
+    // } else {
+    //   if (player.color.r == RED.r && player.color.b == RED.b &&
+    //       player.color.g == RED.g) {
+    //     player.color = ORANGE;
+    //   }
+    // }
+
+    // Entity ground = {
+    //     .y = screenHeight - 50,
+    //     .dx = 0,
+    //     .x = 0,
+    //     .dy = 0,
+    //     .width = screenWidth,
+    //     .height = 50,
+    //     .attackCooldown = 0,
+    // };
+    // DrawRectangle(ground.x, ground.y, ground.width, ground.height, BROWN);
+
+    // DEBUG //
+    snprintf(xbuffer, 100, "X: %i", player.x);
+    snprintf(buffer, 100, "Y: %i", player.y);
+    DrawText(buffer, screenWidth - 80, 20, 20, RED);
+    DrawText(xbuffer, screenWidth - 80, 40, 20, RED);
 
     EndDrawing();
   }
@@ -156,3 +204,6 @@ int main(int argc, char *argv[]) {
 // 2d side view one room - each room is a levels
 // core mechanic is parrying
 //
+//
+// You can charge your parry meter and when its full you can maybe dash or
+// something. Maybe ranged energy attack that destroys projectiles and pierces
