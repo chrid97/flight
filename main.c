@@ -13,8 +13,6 @@ typedef struct Entity {
   int16_t dy;
   int16_t width;
   int16_t height;
-  int16_t attackCooldown;
-  int16_t parryCooldown;
   PlayerState state;
   bool facingRight;
   Color color;
@@ -38,16 +36,10 @@ int main(int argc, char *argv[]) {
                    .dy = 3,
                    .width = 32,
                    .height = 32,
-                   .attackCooldown = 0,
-                   .parryCooldown = 0,
                    .facingRight = true,
                    .state = IDLE,
                    .color = ORANGE};
 
-  // IDLE animation
-  Vector2 origin = {0, 0};
-  Texture2D playerIdle = LoadTexture("./assets/player/IDLE.png");
-  Texture2D playerWalk = LoadTexture("./assets/player/WALK.png");
   // pixel widht is supposed to be 32 px but this seems like a better size,
   // maybe other animations use more the screen
   // i feel like i should combine the sprite sheets so i only have to load 1
@@ -55,57 +47,7 @@ int main(int argc, char *argv[]) {
   // i wonder if it makes sense to change the size of my hitbox depending on
   // what im doing int frameWidth = 21;
 
-  typedef struct {
-    int frameCount;
-    int frameWidth;
-    int frameHeight;
-    int startX; // x offset in texture for first frame
-    int startY;
-    int frameSpacing; // pixel spacing between frames (often 0)
-    float fps;
-  } AnimationInfo;
-
-  typedef struct {
-    Texture2D texture;
-    AnimationInfo info;
-    float frameTimer;
-    int currentFrame;
-  } Animation;
-
-  typedef struct {
-    Animation animations[TOTAL_COUNT];
-    PlayerState current;
-    bool facingRight;
-  } SpriteAnimator;
-
-  SpriteAnimator playerAnimator = {.facingRight = true};
-  playerAnimator.animations[IDLE] =
-      (Animation){.texture = LoadTexture("./assets/player/IDLE.png"),
-                  .info = {.frameCount = 4,
-                           .frameWidth = 32,
-                           .frameHeight = 32,
-                           .startX = 0,
-                           .startY = 0,
-                           .fps = 10}};
-
-  playerAnimator.animations[WALK] = (Animation){
-      .texture = LoadTexture("./assets/player/WALK.png"),
-      // i think framcount is wrong and fps should be framecount instead
-      .info = {.frameCount = 6,
-               .frameWidth = 32,
-               .frameHeight = 32,
-               .startX = 0,
-               .startY = 0,
-               .fps = 12}};
-
-  // Rectangle sourceRec = {900.0f, 1200.0f, frameWidth,
-  //                        frameHeight}; // first frame
-  // Rectangle sourceRec2 = {900.0f, 1200.0f, frameWidth,
-  //                         frameHeight}; // first frame
-  // Rectangle destRec = {player.x, player.y, frameWidth * scale,
-  // frameHeight * scale};
   int frameCounter = 0;
-
   while (!WindowShouldClose()) {
     // Input //
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
@@ -120,61 +62,22 @@ int main(int argc, char *argv[]) {
       player.state = IDLE;
     }
 
-    // if (IsKeyDown(KEY_SPACE) && player.parryCooldown == 0) {
-    //   player.parryCooldown = 15;
-    //   player.color = RED;
-    // }
-    //
-    // if (player.parryCooldown > 0) {
-    //   player.parryCooldown--;
-    //   if (player.parryCooldown == 0) {
-    //     player.color = GOLD;
-    //   }
-    // }
-
     // Update
-    // destRec.x = player.x;
-    // destRec.y = player.y;
-
-    // sourceRec.width = player.facingRight ? frameWidth : -frameWidth,
-
-    // frameCounter++;
-    // 10 is totalFrames
-    // if (frameCounter >= (60 / 10)) {
-    //   frameCounter = 0;
-    //   sourceRec.x += 96;
-    // }
-    //
-    // if (frameCounter >= (60 / 12)) {
-    //   sourceRec2.x += 96;
-    // }
-
-    // sourceRec.x
 
     // Draw //
     BeginDrawing();
     ClearBackground(BLACK);
     switch (player.state) {
     case IDLE: {
-      AnimationInfo info = playerAnimator.animations[IDLE].info;
-      Rectangle sourceRec = {900.0f, 1200.0f, info.frameWidth,
-                             info.frameHeight}; // first frame
-      Rectangle destRec = {player.x, player.y, info.frameWidth * scale,
-                           info.frameHeight * scale};
-      DrawTexturePro(playerIdle, sourceRec, destRec, origin, 0.0f, WHITE);
       break;
     }
-    case WALK:
-      // DrawTexturePro(playerWalk, sourceRec, destRec, origin, 0.0f, WHITE);
+    case WALK: {
       break;
+    }
     }
     // DrawRectangleRec(destRec, (Color){100, 100, 100, 100}); // RGBA
 
     EndDrawing();
-  }
-
-  for (int i = 0; i < TOTAL_COUNT; i++) {
-    UnloadTexture(playerAnimator.animations[i].texture);
   }
 
   CloseWindow();
