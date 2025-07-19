@@ -5,12 +5,12 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   eval cc main.c $(pkg-config --libs --cflags raylib) -o flight.exe
 else
   # Linux settings
-  gcc main.c ./lib/cJSON/cJSON.c \
+  gcc ./src/main.c ./lib/cJSON/cJSON.c \
     -I./lib/raylib/include -I./lib/cJSON \
     -L./lib/raylib/lib -Wl,-rpath=./lib/raylib/lib \
     -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 \
-    -o flight.exe
+    -o game.exe
 fi
 
-./flight.exe
-rm flight.exe
+./game.exe
+rm game.exe
