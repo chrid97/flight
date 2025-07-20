@@ -2,7 +2,7 @@
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # macOS settings
-  eval cc main.c $(pkg-config --libs --cflags raylib) -o flight.exe
+  eval cc ./src/main.c $(pkg-config --libs --cflags raylib) -o game.exe
 else
   # Linux settings
   gcc ./src/main.c ./lib/cJSON/cJSON.c \
@@ -13,4 +13,4 @@ else
 fi
 
 ./game.exe
-rm game.exe
+rm ./game.exe
