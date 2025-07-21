@@ -1,5 +1,4 @@
 #include "raylib.h"
-#include "types.h"
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
@@ -11,6 +10,7 @@ typedef enum {
   WALK,
   JUMP,
   ATTACK,
+  ATTACK_RECOVERY,
   RUN,
   EVADE,
   FALLING,
@@ -62,6 +62,20 @@ Entity enemy = {
 
 int parry_timer = 0;
 int main(void) {
+  Entity enemy_weapon = {
+      .x = enemy.x - enemy.width,
+      .y = enemy.y + (enemy.height / 2),
+      .dx = 3,
+      .dy = 3,
+      .width = 100,
+      .height = 5,
+      .onGround = false,
+      .color = MAGENTA,
+      .state = IDLE,
+      .attack_cooldown = 0,
+  };
+  float rotation = 0;
+
   InitWindow(800, 450, "Parry");
   SetTargetFPS(60);
   while (!WindowShouldClose()) {
@@ -105,7 +119,7 @@ int main(void) {
     }
 
     int distance = fabsf(enemy.x - player.x);
-    if (distance >= 0 && distance <= 50) {
+    if (distance >= 0 && distance <= 100) {
       enemy.state = ATTACK;
     } else if (distance > 100) {
       enemy.state = WALK;
@@ -115,7 +129,15 @@ int main(void) {
 
     switch (enemy.state) {
     case ATTACK: {
-      enemy.color = YELLOW;
+      if (fabsf(rotation) != 180) {
+        printf("rotate u\n");
+        rotation -= 6;
+      }
+
+      if (fabsf(rotation) == 180) {
+        printf("fuck u\n");
+        enemy.state = ATTACK_RECOVERY;
+      }
       break;
     }
     case WALK: {
@@ -124,6 +146,14 @@ int main(void) {
       } else {
         enemy.x -= enemy.dx;
       }
+      enemy_weapon.x = enemy.x - enemy.width;
+      enemy_weapon.y = enemy.y + (enemy.height / 2);
+      break;
+    }
+
+    case ATTACK_RECOVERY: {
+      printf("fuck u\n");
+      rotation += 3.5;
       break;
     }
     default:
@@ -137,10 +167,11 @@ int main(void) {
                   player.color);
 
     DrawRectangle(enemy.x, enemy.y, enemy.width, enemy.height, enemy.color);
-    if (enemy.state == ATTACK) {
-      DrawRectangle(enemy.x - enemy.width, enemy.y + (enemy.height / 2), 100, 5,
-                    enemy.color);
-    }
+    // DrawRectangle(enemy_weapon.x, enemy_weapon.y, enemy_weapon.width,
+    //               enemy_weapon.height, enemy_weapon.color);
+    DrawRectanglePro((Rectangle){enemy_weapon.x, enemy_weapon.y,
+                                 enemy_weapon.width, enemy_weapon.height},
+                     (Vector2){0, 0}, rotation, enemy_weapon.color);
 
     EndDrawing();
   }
