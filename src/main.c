@@ -46,35 +46,35 @@ Entity player = {
     .color = WHITE,
     .state = IDLE,
 };
-
-Entity enemy = {
-    .x = 800 - 32 - 62,
-    .y = 450 - 32,
-    .dx = 3,
-    .dy = 3,
-    .width = 22,
-    .height = 32,
-    .onGround = false,
-    .color = PURPLE,
-    .state = IDLE,
-    .attack_cooldown = 0,
-};
-
 int parry_timer = 0;
+
 int main(void) {
-  Entity enemy_weapon = {
-      .x = enemy.x - enemy.width,
-      .y = enemy.y + (enemy.height / 2),
+  Entity enemy = {
+      .x = 800 - 62 - 48,
+      .y = 450 - 48,
       .dx = 3,
       .dy = 3,
-      .width = 100,
+      .width = 48,
+      .height = 48,
+      .onGround = false,
+      .color = PURPLE,
+      .state = IDLE,
+      .attack_cooldown = 0,
+  };
+
+  Entity enemy_weapon = {
+      .x = enemy.x - enemy.width + 35,
+      .y = enemy.y + (enemy.height / 2) + 10,
+      .dx = 3,
+      .dy = 3,
+      .width = 120,
       .height = 5,
       .onGround = false,
       .color = MAGENTA,
       .state = IDLE,
       .attack_cooldown = 0,
   };
-  float rotation = 0;
+  float rotation = 330;
 
   InitWindow(800, 450, "Parry");
   SetTargetFPS(60);
@@ -118,46 +118,56 @@ int main(void) {
       player.onGround = true;
     }
 
-    int distance = fabsf(enemy.x - player.x);
-    if (distance >= 0 && distance <= 100) {
-      enemy.state = ATTACK;
-    } else if (distance > 100) {
-      enemy.state = WALK;
-    } else {
-      enemy.state = IDLE;
-    }
+    // int distance = fabsf(enemy.x - player.x);
+    // if (enemy.state != ATTACK && enemy.state != ATTACK_RECOVERY) {
+    //   if (distance >= 0 && distance <= 100) {
+    //     enemy.state = ATTACK;
+    //   } else if (distance > 100) {
+    //     enemy.state = WALK;
+    //   } else {
+    //     enemy.state = IDLE;
+    //   }
+    // }
 
     switch (enemy.state) {
-    case ATTACK: {
-      if (fabsf(rotation) != 180) {
-        printf("rotate u\n");
-        rotation -= 6;
-      }
-
-      if (fabsf(rotation) == 180) {
-        printf("fuck u\n");
-        enemy.state = ATTACK_RECOVERY;
-      }
-      break;
-    }
     case WALK: {
-      if (player.x > enemy.x) {
-        enemy.x += enemy.dx;
-      } else {
-        enemy.x -= enemy.dx;
-      }
-      enemy_weapon.x = enemy.x - enemy.width;
-      enemy_weapon.y = enemy.y + (enemy.height / 2);
+      // if (player.x > enemy.x) {
+      //   enemy.x += enemy.dx;
+      // } else {
+      //   enemy.x -= enemy.dx;
+      // }
+      // enemy_weapon.x = enemy.x - enemy.width;
+      // enemy_weapon.y = enemy.y + (enemy.height / 2);
       break;
     }
-
+    case ATTACK: {
+      // if (fabsf(rotation) != 180) {
+      //   rotation -= 4;
+      // }
+      // if (fabsf(rotation) == 180) {
+      //   enemy.state = ATTACK_RECOVERY;
+      // }
+      break;
+    }
     case ATTACK_RECOVERY: {
-      printf("fuck u\n");
-      rotation += 3.5;
+      // rotation += 3.5;
+      // if (fabsf(rotation) == 180) {
+      //   enemy.state = IDLE;
+      // }
       break;
     }
     default:
       enemy.color = PURPLE;
+    }
+
+    if (rotation < 175) {
+      enemy.state = ATTACK_RECOVERY;
+    } else {
+      rotation -= 3.5;
+    }
+
+    if (enemy.state == ATTACK_RECOVERY) {
+      rotation += 3.5;
     }
 
     // Drawing
@@ -167,8 +177,12 @@ int main(void) {
                   player.color);
 
     DrawRectangle(enemy.x, enemy.y, enemy.width, enemy.height, enemy.color);
-    // DrawRectangle(enemy_weapon.x, enemy_weapon.y, enemy_weapon.width,
-    //               enemy_weapon.height, enemy_weapon.color);
+    // DrawRectanglePro(
+    //     (Rectangle){enemy_weapon.x + 25, enemy_weapon.y - 100, 50, 100},
+    //     (Vector2){0, 0}, rotation, enemy_weapon.color);
+    DrawRectanglePro(
+        (Rectangle){enemy_weapon.x + 90, enemy_weapon.y - 75, 45, 15},
+        (Vector2){0, 0}, rotation, enemy_weapon.color);
     DrawRectanglePro((Rectangle){enemy_weapon.x, enemy_weapon.y,
                                  enemy_weapon.width, enemy_weapon.height},
                      (Vector2){0, 0}, rotation, enemy_weapon.color);
