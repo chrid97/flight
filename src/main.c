@@ -5,6 +5,27 @@
 #include <stdint.h>
 #include <stdio.h>
 
+// Utility function to rotate a point around an origin
+Vector2 RotatePoint(Vector2 point, Vector2 origin, float angle) {
+  float radians = angle * DEG2RAD;
+  float s = sinf(radians);
+  float c = cosf(radians);
+
+  // Translate point back to origin
+  point.x -= origin.x;
+  point.y -= origin.y;
+
+  // Rotate
+  float xnew = point.x * c - point.y * s;
+  float ynew = point.x * s + point.y * c;
+
+  // Translate back
+  point.x = xnew + origin.x;
+  point.y = ynew + origin.y;
+
+  return point;
+}
+
 typedef enum {
   IDLE,
   WALK,
@@ -33,6 +54,8 @@ typedef struct {
   int attack_cooldown;
   int attack_timer;
   bool hit_registered;
+  int health;
+  bool is_attacking;
 } Entity;
 
 Entity player = {
@@ -45,6 +68,8 @@ Entity player = {
     .onGround = false,
     .color = WHITE,
     .state = IDLE,
+    .health = 10,
+    .is_attacking = true,
 };
 int parry_timer = 0;
 
@@ -60,6 +85,8 @@ int main(void) {
       .color = PURPLE,
       .state = IDLE,
       .attack_cooldown = 0,
+      .health = 10,
+      .is_attacking = true,
   };
 
   Entity enemy_weapon = {
@@ -76,9 +103,12 @@ int main(void) {
   };
   float rotation = 330;
 
+  // delta - how much time has passed since the last frame
   InitWindow(800, 450, "Parry");
   SetTargetFPS(60);
   while (!WindowShouldClose()) {
+    float delta = GetFrameTime();
+
     if (parry_timer > 0) {
       parry_timer--;
     }
@@ -131,44 +161,72 @@ int main(void) {
 
     switch (enemy.state) {
     case WALK: {
-      // if (player.x > enemy.x) {
-      //   enemy.x += enemy.dx;
-      // } else {
-      //   enemy.x -= enemy.dx;
-      // }
-      // enemy_weapon.x = enemy.x - enemy.width;
-      // enemy_weapon.y = enemy.y + (enemy.height / 2);
+      if (false) {
+        if (player.x > enemy.x) {
+          enemy.x += enemy.dx;
+        } else {
+          enemy.x -= enemy.dx;
+        }
+        enemy_weapon.x = enemy.x - enemy.width;
+        enemy_weapon.y = enemy.y + (enemy.height / 2);
+      }
       break;
     }
     case ATTACK: {
-      // if (fabsf(rotation) != 180) {
-      //   rotation -= 4;
-      // }
-      // if (fabsf(rotation) == 180) {
-      //   enemy.state = ATTACK_RECOVERY;
-      // }
       break;
     }
     case ATTACK_RECOVERY: {
-      // rotation += 3.5;
-      // if (fabsf(rotation) == 180) {
-      //   enemy.state = IDLE;
-      // }
       break;
     }
     default:
       enemy.color = PURPLE;
     }
 
-    if (rotation < 175) {
+    if (enemy.is_attacking) {
+      enemy.is_attacking = false;
       enemy.state = ATTACK_RECOVERY;
     } else {
-      rotation -= 3.5;
+      rotation -= 500 * delta;
+    }
+
+    // Weapon base and tip position BEFORE rotation
+    Vector2 weapon_origin = (Vector2){enemy_weapon.x, enemy_weapon.y};
+    Vector2 weapon_tip =
+        (Vector2){enemy_weapon.x + enemy_weapon.width, enemy_weapon.y};
+
+    // Rotate tip around the origin
+    Vector2 rotated_tip = RotatePoint(weapon_tip, weapon_origin, rotation);
+
+    // Visualize tip hitbox
+    DrawCircleV(rotated_tip, 5, RED);
+
+    // Hit detection (example: circular hitbox)
+    float hit_radius = 5.0f;
+    Vector2 player_center =
+        (Vector2){player.x + player.width / 2, player.y + player.height / 2};
+    bool hit = CheckCollisionCircles(rotated_tip, hit_radius, player_center,
+                                     player.width / 2);
+
+    if (hit) {
+      DrawText("HIT!", 10, 10, 20, RED);
     }
 
     if (enemy.state == ATTACK_RECOVERY) {
-      rotation += 3.5;
+      rotation = 0;
+      enemy.state = IDLE;
     }
+
+    if (enemy.state == IDLE) {
+      // printf("%i", enemy.state);
+      enemy.state = ATTACK;
+    }
+    printf("%f\n", enemy_weapon.y);
+
+    // if (enemy.state == ATTACK_RECOVERY) {
+    //   rotation += 3.5;
+    // }
+
+    // printf("%i\n", enemy_weapon.y);
 
     // Drawing
     BeginDrawing();
@@ -180,9 +238,9 @@ int main(void) {
     // DrawRectanglePro(
     //     (Rectangle){enemy_weapon.x + 25, enemy_weapon.y - 100, 50, 100},
     //     (Vector2){0, 0}, rotation, enemy_weapon.color);
-    DrawRectanglePro(
-        (Rectangle){enemy_weapon.x + 90, enemy_weapon.y - 75, 45, 15},
-        (Vector2){0, 0}, rotation, enemy_weapon.color);
+    // DrawRectanglePro(
+    //     (Rectangle){enemy_weapon.x + 90, enemy_weapon.y - 75, 45, 15},
+    //     (Vector2){0, 0}, rotation, enemy_weapon.color);
     DrawRectanglePro((Rectangle){enemy_weapon.x, enemy_weapon.y,
                                  enemy_weapon.width, enemy_weapon.height},
                      (Vector2){0, 0}, rotation, enemy_weapon.color);
